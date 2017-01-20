@@ -25,8 +25,6 @@ var iadea_port = null;
 
 var IADEA_TIMEOUT = 5000;
 
-
-
 var connect = function(host, port, user, password) {
     iadea_host = host;
     iadea_port = (port || 8080);
@@ -40,23 +38,65 @@ var connect = function(host, port, user, password) {
     return call('/v2/oauth2/token', data).
         then(function (res){
             access_token = res.access_token;
+            console.log('access_token=' + access_token);
         });
 };
 
 var uploadFile = function (filename, downloadPath) {
     var deferred = Q.defer();
-
-    function getFilesizeInBytes(name) {
-        var stats = fs.statSync(name);
-        return stats["size"];
-    }
-
+    var mimeType = '';
+    var modified = '';
     var fileSize = 0;
 
+    var extension = filename.split('.').pop();
+    switch (extension) {
+        case 'jpg' :
+        case 'jpeg':
+            mimeType = 'image/jpeg';
+            break;
+        case 'png' :
+            mimeType = 'image/png';
+            break;
+        case 'mp4':
+            mimeType = 'video/mp4';
+            break;
+        case "mpe":
+        case "mpeg":
+        case "mpg":
+            mimeType = 'video/mpeg';
+            break;
+        case "avi":
+            mimeType = 'video/x-msvideo';
+            break;
+        case "wmv":
+            mimeType = 'video/x-ms-wmv';
+            break;
+        case "divx":
+            mimeType = 'video/x-divx';
+            break;
+        case "mov":
+            mimeType = 'video/quicktime';
+            break;
+        case 'smil':
+        case 'smi':
+            mimeType = 'application/smil';
+            break;
+        case "txt":
+            mimeType = 'text/plain';
+            break;
+        case "mp3":
+            mimeType = 'audio/mpeg';
+            break;
+        default:
+            console.log('Unknown mimeType = ' + extension);
+    }
+
     try {
-        fileSize = getFilesizeInBytes(filename);
+        var stats = fs.statSync(filename);
+        fileSize = stats['size'];
+        modified = stats['mtime'];
     } catch (err) {
-        // file not found or other file access errro
+        // file not found or other file access error
         deferred.reject(err);
         return deferred.promise;
     }
@@ -90,8 +130,14 @@ var uploadFile = function (filename, downloadPath) {
         + 'Content-Disposition: form-data; name="fileSize"\r\n\r\n'
         + fileSize + '\r\n'
         +  '--' + boundaryKey + '\r\n'
+        + 'Content-Disposition: form-data; name="mimeType"\r\n\r\n'
+        + mimeType + '\r\n'
+        +  '--' + boundaryKey + '\r\n'
+        + 'Content-Disposition: form-data; name="modifiedDate"\r\n\r\n'
+        + modified + '\r\n'
+        +  '--' + boundaryKey + '\r\n'
         + 'Content-Disposition: form-data; name="data"; filename=""\r\n'
-        + 'Content-Type: application/octet-stream\r\n\r\n';
+        +' Content-Type: application/octet-stream\r\n\r\n';
 
     var formEnd = '\r\n--' + boundaryKey + '--';
 
@@ -164,10 +210,17 @@ var setStart = function(downloadPath) {
     return call('/v2/app/start', start_command);
 };
 
-var deleteFile = function (id) {
-    return call('/v2/files/delete', {id:id});
-};
+var deleteFiles = function (files) {
+    function _delete(id) {
+        return call('/v2/files/delete', {id:id})
+    }
 
+    if (files instanceof Array) {
+        var promises = files.map(_delete);
+        return Q.all(promises);
+    } else
+        return _delete(files);
+};
 
 
 var call = function(uri, data, contentType) {
@@ -229,5 +282,5 @@ exports.findFileByName = findFileByName;
 exports.playFile = playFile;
 exports.reboot = reboot;
 exports.setStart = setStart;
-exports.deleteFile = deleteFile;
+exports.deleteFiles = deleteFiles;
 exports.uploadFile = uploadFile;
