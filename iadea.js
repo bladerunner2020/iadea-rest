@@ -12,7 +12,6 @@
 var http = require('http');
 var Q = require('q');
 var fs = require('fs');
-var FormData = require('form-data');
 
 
 /**
@@ -44,23 +43,29 @@ var connect = function(host, port, user, password) {
         });
 };
 
-var uploadFile = function (filename) {
-    console.log(access_token)
-    var form = new FormData();
-    var stream = fs.createReadStream("./iadea.js");
-    form.append("downloadPath", "/user-data/media/test.smil");
+var uploadFile = function (filename, downloadPath) {
+    var deferred = Q.defer();
 
-    form.append("data", new Buffer(10));
-    form.append("fileSize", 10);
+    function getFilesizeInBytes(name) {
+        var stats = fs.statSync(name);
+        return stats["size"];
+    }
+
+    var fileSize = 0;
+
+    try {
+        fileSize = getFilesizeInBytes(filename);
+    } catch (err) {
+        // file not found or other file access errro
+        deferred.reject(err);
+        return deferred.promise;
+    }
 
     var options = {
         host: iadea_host,
         port: iadea_port,
         path: '/v2/files/new?access_token=' + access_token,
-        method: 'POST',
-        headers: {'Content-Type': 'multipart/form-data'}};
-
-
+        method: 'POST'};
 
     var req = http.request(options, function(response) {
         var data = '';
@@ -69,29 +74,41 @@ var uploadFile = function (filename) {
         });
 
         response.on('end', function () {
-            try {
-                data = JSON.parse(data);
-                console.log(data);
-            } catch (err) {
-                console.log(err);
-            }
-
+            console.log(data);
+            deferred.resolve(data);
         });
     });
 
-    form.pipe(req);
+    var boundaryKey = Math.random().toString(16); // random string
+    req.setHeader('Content-Type', 'multipart/form-data; boundary="'+boundaryKey+'"');
 
-    req.on('response', function(res) {
-        console.log(res.statusCode);
-    });
-    req.on('error', function(err) {
-        console.log(err);
-        // deferred.reject(err);
-    });
+    var formStart =
+        '--' + boundaryKey + '\r\n'
+        + 'Content-Disposition: form-data; name="downloadPath"\r\n\r\n'
+        + downloadPath + '\r\n'
+        + '--' + boundaryKey + '\r\n'
+        + 'Content-Disposition: form-data; name="fileSize"\r\n\r\n'
+        + fileSize + '\r\n'
+        +  '--' + boundaryKey + '\r\n'
+        + 'Content-Disposition: form-data; name="data"; filename=""\r\n'
+        + 'Content-Type: application/octet-stream\r\n\r\n';
 
-    req.end();
+    var formEnd = '\r\n--' + boundaryKey + '--';
 
+    var contentLength = formStart.length + formEnd.length + fileSize;
+    req.setHeader('Content-Length',contentLength);
 
+    req.write(formStart);
+
+    fs.createReadStream(filename, { bufferSize: 4 * 1024 })
+        .on('end', function() {
+            // mark the end of the one and only part
+            req.end(formEnd);
+        })
+        // set "end" to false in the options so .end() isn't called on the request
+        .pipe(req, { end: false });
+
+    return deferred.promise;
 };
 
 
@@ -203,36 +220,6 @@ var call = function(uri, data, contentType) {
 
     return deferred.promise;
 };
-
-/*
-console.log("DEBUG - REMOVE");
-call = function (uri, data, contentType) {
-    var deferred = Q.defer();
-
-    var value = null;
-
-    switch (uri) {
-        case '/v2/oauth2/token':
-            value = null;
-            break;
-        case '/v2/files/find' :
-            value = [{id:1, name: "1"}, {id:2, name: "2"}];
-            break;
-        case '/v2/files/1':
-            value = {name: "1"};
-            break;
-        case '/v2/files/2':
-            value = {name: "2"};
-            break;
-
-    }
-
-    deferred.resolve(value);
-
-    return deferred.promise;
-
-};
-*/
 
 
 exports.connect = connect;
