@@ -33,15 +33,20 @@ function setPlayerName(newname) {
 }
 
 
-function LogFiles(name) {
+function LogFiles(name, type) {
     console.log("Iadea files");
 
-    return iadea.getFileList().then( function(data) {
+    return iadea.getFileList(name).then( function(data) {
         var files = data.items;
         for (var i = 0; i < files.length; i++) {
-            if (!name || (files[i].downloadPath.includes(name)))
-                console.log(files[i].id +'  ' + files[i].downloadPath + '  ' + 'mimeType: ' + files[i].mimeType);
-               // console.log(files[i]);
+            switch (type) {
+                case 1:
+                    console.log(files[i].id +'  ' + files[i].downloadPath + '  ' + 'mimeType: ' + files[i].mimeType);
+                    break;
+                default:
+                    console.log(files[i]);
+            }
+
         }
     });
 }
@@ -59,6 +64,11 @@ function LogFilesIDs(filter) {
     });
 }
 
+function DeleteFilesByFilter(filter) {
+    return iadea.getFileList(filter).then(iadea.deleteFiles);
+}
+
+
 
 function Play(name) {
     console.log("Looking for file=" + name);
@@ -73,11 +83,11 @@ function Play(name) {
 
 
 // '/Users/Bladerunner/Downloads/Iadea/Iadea Content/image2.jpg';
-var path = '/Users/Bladerunner/Downloads/Iadea/Iadea Content/SMIL/SMIL/slideshow.smil';
-var downloadPath = '/user-data/slideshow.smil';
+// '/Users/Bladerunner/Downloads/Iadea/Iadea Content/SMIL/SMIL/video.smil'
+var path = '/Users/Bladerunner/Downloads/Iadea/Iadea Content/image1.jpg';
+var downloadPath = '/user-data/media/test.jpg';
 
-var files_to_remove = [ 'D6D3D75D405542126996CE1C4CB7DD2', '9528B3C76AD913277CFA220CB191547',
-    '23D8DA8C5C5DAA14C5AFF2133650CB4E', 'C5F5785761A7F733EDF04193B83D497'];
+var files_to_remove = [ '5AB3834E5F8D15CD2B1A75CC58778EA','EB3CEDD36EC979F1F5CD1526BD82DC5'];
 
 
 
@@ -85,16 +95,17 @@ iadea.connect("192.168.2.12").
    // then(iadea.reboot).then(stop).
    // then(iadea.switchToDefault).then(log).
 
-   then(function(){return Play('slideshow.smil')}).then(log).
-   then(function() {return pause(1000)}).
    then(function(){return Play('video.smil')}).then(log).
    // then(iadea.switchToDefault).then(log).
   // then(function(){return iadea.setStart('/user-data/test.smil')}).then(log).
-  //  then(function () {return iadea.deleteFiles(files_to_remove)}).then(log).
+  //  then(function () {return DeleteFilesByFilter('test.jpg')}).then(log).
 
- //   then(function() {return iadea.uploadFile(path,downloadPath )}).then(log).
+//    then(function() {return iadea.uploadFile(path,downloadPath ).progress(function(progress){
+//        console.log(progress);
+//    })}).then(log).
     then(function() {return LogFiles()}).
-    then(function() {return iadea.switchDisplay(true)}).then(log).
+  //  then(function() {return iadea.switchDisplay(true)}).then(log).
+    then(iadea.getModelInfo).then(log).
     catch(function(err) {log(err)});
 
 

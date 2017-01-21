@@ -5,6 +5,26 @@
  */
 
 /**
+ * Json structure with file information.
+ * @typedef {{fileSize: Number, id: String,
+ *  etag: String,
+ *  downloadPath: String,
+ *  createdDate: String,
+ *  transferredSize: Number,
+ *  modifiedDate: String,
+ *  mimeType: String,
+ *  completed: Boolean }} IadeaFile
+ *
+ */
+
+/**
+ * Json structure with user settings information
+ * @typedef {{userPref : [{name: String, value: String}]}} IdeaUserPref
+ *
+ */
+
+
+/**
  * Module dependencies.
  * @private
  */
@@ -25,6 +45,20 @@ var iadea_port = null;
 
 var IADEA_TIMEOUT = 5000;
 
+/**
+ * Connect to device
+ * @public
+ * @param {String} host ip address or host name
+ * @param {Number} port (optional) port number, default: 8080
+ * @param {String} user (optional) user name, default: 'admin'
+ * @param {String} password (optional) user password, default: ''
+ *
+ * @promise {{access_token: String,  -- Authorization token for further API access
+ *  token_type: String,    -- Always "Bearer"
+ *  expires_in: String}}   -- Number of seconds before access_token expires.
+ *                            If this field is returned as an empty string, then the access token does not expire.
+ *
+ */
 var connect = function(host, port, user, password) {
     iadea_host = host;
     iadea_port = (port || 8080);
@@ -42,6 +76,15 @@ var connect = function(host, port, user, password) {
         });
 };
 
+/**
+ * Upload a file to device
+ * @public
+ * @param {String} filename full path to file to upload
+ * @param {String} downloadPath where to upload file, e.g. '/user-data/media/test.jpg'. Should begin with /user-data/
+ *
+ * @promise {IadeaFile}
+ * @notify {{size: Number, done: Number, percent: Number}}, size - total file size, done - uploaded so far
+ */
 var uploadFile = function (filename, downloadPath) {
     var deferred = Q.defer();
     var mimeType = '';
@@ -145,7 +188,13 @@ var uploadFile = function (filename, downloadPath) {
 
     req.write(formStart);
 
-    fs.createReadStream(filename, { bufferSize: 4 * 1024 })
+    var writtenCount = 0;
+    fs.createReadStream(filename, { bufferSize: 40 * 1024 })
+        .on('data', function(data){
+            // notify about progress
+            writtenCount += data.length;
+            deferred.notify({size: fileSize, done: writtenCount, percent: writtenCount/fileSize});
+        })
         .on('end', function() {
             // mark the end of the one and only part
             req.end(formEnd);
@@ -156,28 +205,51 @@ var uploadFile = function (filename, downloadPath) {
     return deferred.promise;
 };
 
+/**
+ * Get list of files or list of files matching filter criteria
+ * @public
+ * @param {String} filter
+ *
+ * @promise {{items:[{IadeaFile}]}} Json structure where items points to array of matching files
+ */
+var getFileList = function(filter) {
+    var deferred = Q.defer();
 
-var playFile = function (downloadPath) {
-    var play_command = {
-        uri: "http://localhost:8080/v2"  + downloadPath,
-        className: "com.iadea.player.SmilActivity",
-        packageName: "com.iadea.player",
-        action: "android.intent.action.VIEW"
-    };
-    
-    return call('/v2/app/exec', play_command);
+    function FilterFiles(data) {
+        var files = data.items;
+        var found = [];
+        for (var i = 0; i < files.length; i++) {
+            if (files[i].downloadPath.includes(filter))
+                found.push(files[i]);
+        }
+        deferred.resolve({items: found});
+        return deferred.promise;
+    }
+
+    if (!filter)
+        return call('/v2/files/find', {});
+
+    return getFileList().then(FilterFiles);
 };
 
-
-var getFileList = function() {
-    return call('/v2/files/find', {});
-};
-
-
+/**
+ * Get file by ID
+ * @public
+ * @param {string} id file id
+ *
+ * @promise {IadeaFile}
+ */
 var getFile = function(id) {
     return call('/v2/files/' + id);
 };
 
+/**
+ * Find (first) file by name
+ * @public
+ * @param {string} name name of file to find
+ *
+ * @promise {IadeaFile}
+ */
 var findFileByName = function (name) {
     return getFileList().
         then(function(data){
@@ -191,13 +263,42 @@ var findFileByName = function (name) {
             throw new Error("Error. File not exist - " + name);
 
         });
-
 };
 
+/**
+ * Reboot player.
+ * @public
+ * @promise {Error}. Note: connection will be terminated and promise rejected is call. Promise resolved is never called in this case.
+ */
 var reboot = function() {
     return call('/v2/task/reboot');
 };
 
+/**
+ * Play content once (could be media file or SMIL)
+ * @public
+ * @param {string} downloadPath location of content
+ *
+ * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
+ */
+var playFile = function (downloadPath) {
+    var play_command = {
+        uri: "http://localhost:8080/v2"  + downloadPath,
+        className: "com.iadea.player.SmilActivity",
+        packageName: "com.iadea.player",
+        action: "android.intent.action.VIEW"
+    };
+
+    return call('/v2/app/exec', play_command);
+};
+
+/**
+ * Set default content to play each time player boots up
+ * @public
+ * @param {string} downloadPath location of content
+ *
+ * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
+ */
 var setStart = function(downloadPath) {
     var start_command = {
         uri: "http://localhost:8080/v2"  + downloadPath,
@@ -209,23 +310,158 @@ var setStart = function(downloadPath) {
     return call('/v2/app/start', start_command);
 };
 
+/**
+ * Switch to play default content (e.g. set by setStart function)
+ * @public
+ * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
+ */
 var switchToDefault = function () {
     return call('/v2/app/switch', {mode: 'start'});
 };
 
+
+/**
+ * Delete one or more files.
+ * @public
+ * @param {(string|string[]|Object|Object[])} files - file ID or array of files ID or file structure or array of structures
+ *
+ * @promise {{}|[{}..{}]} when promise fulfilled returns empty json object or array of empty json objects
+ */
 var deleteFiles = function (files) {
-    function _delete(id) {
+    // Delete a file by fileID or by file Object
+    function _delete(data) {
+        var id = data.id;
+        if (typeof(data) === 'string') id = data;
+
         return call('/v2/files/delete', {id:id})
     }
 
     if (files instanceof Array) {
         var promises = files.map(_delete);
         return Q.all(promises);
-    } else
-        return _delete(files);
+    } else {
+        var id = files.id;
+        if (typeof(files) === 'string') id =files;
+        return _delete(id);
+    }
+};
+
+/**
+ * Get screenshot (not implemented?). It's poorly described in REST API.
+ * @public
+ * @promise {}
+ */
+var getScreenshot = function() {
+    return call('/v2/task/screenshot');
+};
+
+/**
+ * Get the firmware information on device
+ * @public
+ * @promise {{firmwareVersion: String, family: String}}
+ */
+var getFirmwareInfo = function () {
+    return call('/v2/system/firmwareInfo');
+};
+
+/**
+ * Get player model name and other manufacture use only information
+ * @public
+ * @promise {{modelDescription: String, modelName: String, modelURL: String, manufacturer: String, licenseModel: String,
+ *  PCBRevision: String, manufacturerURL: String, PCB: Sring, options: [Sring] }}
+ */
+var getModelInfo = function () {
+    return call('/v2/system/modelInfo');
+};
+
+/**
+ * Checking WIFI status
+ * @public
+ * @promise {Boolean}
+ */
+var isWifiEnabled = function () {
+    return call('/v2/android.net.wifi.WifiManager/isWifiEnabled');
+};
+
+/**
+ * Get configuration from player
+ * @public
+ * @promise {IdeaUserPref} return the player configuration
+ */
+var exportConfiguration = function () {
+    return call('/v2/task/exportConfiguration');
+
+};
+
+/**
+ * Import new configuration to player
+ * @public
+ * @param {IdeaUserPref} config new configuration object ex.
+ * @param {Boolean} runCommit if true commitConfiguration is called at the end
+ *
+ * @promise {{IdeaUserPref,    -- return newly imported configuration
+ *  restartRequired: Boolean,  -- true/false , if restart is required for changes to take effect, restartRequired is true
+ *  commitId: String }}        -- ID for commitConfiguration
+ */
+var importConfiguration = function (config, runCommit) {
+    var cfg = config;
+    if (cfg instanceof Array) {
+        cfg = {userPref: cfg}
+    } else if (typeof(cfg.userPref) == 'undefined') {
+        cfg = {userPref: [config]}
+    }
+
+    if (!runCommit)
+        return call('/v2/task/importConfiguration', cfg);
+
+
+    return call('/v2/task/importConfiguration', cfg).then(commitConfiguration);
+};
+
+/**
+ * Commit new configuration to playerr
+ * @public
+ * @param {String | Object} data Commit Id or Object returned by importConfiguration
+ *
+ * @promise {{ restartRequired: Boolean,    -- true/false , if restart is required for changes to take effect, restartRequired is true
+ *  commitId: String }}                     -- ID for commitConfiguration
+ */
+var commitConfiguration = function(data) {
+    var commitId = data.commitId;
+
+    if (typeof(data) === 'string')
+        commitId = data;
+
+    return call('/v2/task/commitConfiguration', {commitId: commitId});
+
 };
 
 
+/**
+ * Turn display on or off
+ * @public
+ * @param {Boolean} on - true if on
+ *
+ * @promise {{id: Number, power: Boolean}} id is always 0, power - last state of the screen (that was before switchDisplay is caleld)
+ */
+var switchDisplay = function (on) {
+    var power = 'standby';
+    if (on) power = 'on';
+
+    var command = {id: 0, power: power};
+
+    return call('/v2/hardware/display', command);
+};
+
+/**
+ * Performe call to Iadea REST API
+ * @private
+ * @param {String} uri REST API command
+ * @param {Object} data - parameters
+ * @param {String} contentType - optional. default ('application/json')
+ *
+ * @promise {Json} when promise fulfilled returns json object with output data
+ */
 var call = function(uri, data, contentType) {
     var deferred = Q.defer();
 
@@ -263,6 +499,7 @@ var call = function(uri, data, contentType) {
     });
 
     req.on('error', function(err) {
+        // If reboot is run. 'ECONNRESET' (scocket hang up) error is thrown.
         deferred.reject(err);
     });
 
@@ -277,60 +514,6 @@ var call = function(uri, data, contentType) {
     return deferred.promise;
 };
 
-var getScreenshot = function() {
-    return call('/v2/task/screenshot');
-};
-
-var getFirmwareInfo = function () {
-    return call('/v2/system/firmwareInfo');
-};
-
-var getModelInfo = function () {
-    return call('/v2/system/modelInfo');
-};
-
-var isWifiEnabled = function () {
-    return call('/v2/android.net.wifi.WifiManager/isWifiEnabled');
-};
-
-var exportConfiguration = function () {
-    return call('/v2/task/exportConfiguration');
-
-};
-
-var importConfiguration = function (config, runCommit) {
-    var cfg = config;
-    if (cfg instanceof Array) {
-        cfg = {userPref: cfg}
-    } else if (typeof(cfg.userPref) == 'undefined') {
-        cfg = {userPref: [config]}
-    }
-
-    if (!runCommit)
-        return call('/v2/task/importConfiguration', cfg);
-
-
-    return call('/v2/task/importConfiguration', cfg).then(commitConfiguration);
-};
-
-var commitConfiguration = function(data) {
-    var commitId = data.commitId;
-
-    if (typeof(data) === 'string')
-        commitId = data;
-
-    return call('/v2/task/commitConfiguration', {commitId: commitId});
-
-};
-
-var switchDisplay = function (on) {
-    var power = 'standby';
-    if (on) power = 'on';
-
-    var command = {id: 0, power: power};
-
-    return call('/v2/hardware/display', command);
-};
 
 
 exports.connect = connect;
