@@ -114,7 +114,6 @@ var uploadFile = function (filename, downloadPath) {
         });
 
         response.on('end', function () {
-            console.log(data);
             deferred.resolve(data);
         });
     });
@@ -210,6 +209,10 @@ var setStart = function(downloadPath) {
     return call('/v2/app/start', start_command);
 };
 
+var switchToDefault = function () {
+    return call('/v2/app/switch', {mode: 'start'});
+};
+
 var deleteFiles = function (files) {
     function _delete(id) {
         return call('/v2/files/delete', {id:id})
@@ -274,6 +277,61 @@ var call = function(uri, data, contentType) {
     return deferred.promise;
 };
 
+var getScreenshot = function() {
+    return call('/v2/task/screenshot');
+};
+
+var getFirmwareInfo = function () {
+    return call('/v2/system/firmwareInfo');
+};
+
+var getModelInfo = function () {
+    return call('/v2/system/modelInfo');
+};
+
+var isWifiEnabled = function () {
+    return call('/v2/android.net.wifi.WifiManager/isWifiEnabled');
+};
+
+var exportConfiguration = function () {
+    return call('/v2/task/exportConfiguration');
+
+};
+
+var importConfiguration = function (config, runCommit) {
+    var cfg = config;
+    if (cfg instanceof Array) {
+        cfg = {userPref: cfg}
+    } else if (typeof(cfg.userPref) == 'undefined') {
+        cfg = {userPref: [config]}
+    }
+
+    if (!runCommit)
+        return call('/v2/task/importConfiguration', cfg);
+
+
+    return call('/v2/task/importConfiguration', cfg).then(commitConfiguration);
+};
+
+var commitConfiguration = function(data) {
+    var commitId = data.commitId;
+
+    if (typeof(data) === 'string')
+        commitId = data;
+
+    return call('/v2/task/commitConfiguration', {commitId: commitId});
+
+};
+
+var switchDisplay = function (on) {
+    var power = 'standby';
+    if (on) power = 'on';
+
+    var command = {id: 0, power: power};
+
+    return call('/v2/hardware/display', command);
+};
+
 
 exports.connect = connect;
 exports.getFileList = getFileList;
@@ -284,3 +342,11 @@ exports.reboot = reboot;
 exports.setStart = setStart;
 exports.deleteFiles = deleteFiles;
 exports.uploadFile = uploadFile;
+exports.switchToDefault = switchToDefault;
+exports.getScreenshot = getScreenshot;
+exports.getFirmwareInfo = getFirmwareInfo;
+exports.getModelInfo = getModelInfo;
+exports.isWifiEnabled = isWifiEnabled;
+exports.exportConfiguration = exportConfiguration;
+exports.importConfiguration = importConfiguration;
+exports.switchDisplay = switchDisplay;

@@ -1,7 +1,37 @@
-
 var iadea = require('./iadea');
+var Q = require('q');
 
-var log = function(text) {console.log(text)};
+var log = function(text) {
+    var deferred =  Q.defer();
+    console.log(text);
+    deferred.resolve();
+    return deferred.promise;
+};
+
+function stop() {
+    var deferred =  Q.defer();
+    deferred.reject(new Error("Aborted by function 'stop'"));
+    return deferred.promise;
+}
+
+function pause(pause) {
+    var deferred =  Q.defer();
+    console.log("Waiting for " + (pause || 10000) + "ms");
+
+    setTimeout(function(){
+        console.log("Pause is finished");
+        deferred.resolve()
+    }, pause || 10000);
+
+    return deferred.promise;
+}
+
+function setPlayerName(newname) {
+    var cfg = {name: 'info.playerName', value: newname};
+
+    return iadea.importConfiguration(cfg, true);
+}
+
 
 function LogFiles(name) {
     console.log("Iadea files");
@@ -16,6 +46,20 @@ function LogFiles(name) {
     });
 }
 
+function LogFilesIDs(filter) {
+    var ids = [];
+    return iadea.getFileList().then(function(data) {
+        var files = data.items;
+        for (var i=0; i < files.length; i++) {
+            if (files[i].downloadPath.includes(filter)) {
+                ids.push(files[i].id );
+            }
+        }
+        console.log(ids);
+    });
+}
+
+
 function Play(name) {
     console.log("Looking for file=" + name);
     function PlayFile(file) {
@@ -28,28 +72,29 @@ function Play(name) {
 }
 
 
-var path = '/Users/Bladerunner/Downloads/Iadea/Iadea Content/SMIL/SMIL/index1.smil';
-var downloadPath = '/user-data/media/index3.smil';
+// '/Users/Bladerunner/Downloads/Iadea/Iadea Content/image2.jpg';
+var path = '/Users/Bladerunner/Downloads/Iadea/Iadea Content/SMIL/SMIL/slideshow.smil';
+var downloadPath = '/user-data/slideshow.smil';
 
-var files_to_remove = ['59F0EDFEE48072AD2B4624A92D7394C0',
-    'BB786361D6C57E3F6A11D2140A6CCBA',
-    'AFFF4AF6C879BD634AD67B241477F79',
-    'BAB9B64A4F94FA1B9429B323A3A3E869',
-    'C55FABD8B25CB4427764113FBA7CCE',
-    '6324FAC6DD4928720E5EB22B25D4CE2'];
+var files_to_remove = [ 'D6D3D75D405542126996CE1C4CB7DD2', '9528B3C76AD913277CFA220CB191547',
+    '23D8DA8C5C5DAA14C5AFF2133650CB4E', 'C5F5785761A7F733EDF04193B83D497'];
 
-path = '/Users/Bladerunner/Downloads/Iadea/Iadea Content/image2.jpg';
-downloadPath = '/user-data/media/image2.jpg';
 
 
 iadea.connect("192.168.2.12").
+   // then(iadea.reboot).then(stop).
+   // then(iadea.switchToDefault).then(log).
 
-   then(function(){return Play('index3.smil')}).
-  // then(function(){return iadea.setStart('/user-data/index.smil')}).
-  //  then(function () {return iadea.deleteFiles(files_to_remove)}).
-    then(log).
+   then(function(){return Play('slideshow.smil')}).then(log).
+   then(function() {return pause(1000)}).
+   then(function(){return Play('video.smil')}).then(log).
+   // then(iadea.switchToDefault).then(log).
+  // then(function(){return iadea.setStart('/user-data/test.smil')}).then(log).
+  //  then(function () {return iadea.deleteFiles(files_to_remove)}).then(log).
+
+ //   then(function() {return iadea.uploadFile(path,downloadPath )}).then(log).
     then(function() {return LogFiles()}).
-//    then(function() {return iadea.uploadFile(path,downloadPath )}).then(log).
+    then(function() {return iadea.switchDisplay(true)}).then(log).
     catch(function(err) {log(err)});
 
 
