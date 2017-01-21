@@ -334,19 +334,23 @@ var switchToDefault = function () {
 var deleteFiles = function (files) {
     // Delete a file by fileID or by file Object
     function _delete(data) {
-        var id = data.id;
-        if (typeof(data) === 'string') id = data;
+        var id = data.id;                               // data can be IdeaFile structure (then get id from it)
+        if (typeof(data) === 'string') id = data;       // or just ID of file to delete
 
         return call('/v2/files/delete', {id:id})
     }
 
-    if (files instanceof Array) {
-        var promises = files.map(_delete);
-        return Q.all(promises);
+    var f_arr = files.items; // is it object returned by getFileList?
+    if (typeof(f_arr) === 'undefined') f_arr = files;
+
+    if (f_arr instanceof Array) {                      //is it array of IDs/IdeaFiles or not array?
+        return f_arr.reduce(function(promise, n) {     // process array sequentially using promises
+            return promise.then(function() {
+                return _delete(n);
+            });
+        }, Q.resolve());
     } else {
-        var id = files.id;
-        if (typeof(files) === 'string') id =files;
-        return _delete(id);
+        return _delete(f_arr);
     }
 };
 
@@ -517,8 +521,6 @@ var call = function(uri, data, contentType) {
 
     return deferred.promise;
 };
-
-
 
 exports.connect = connect;
 exports.getFileList = getFileList;
