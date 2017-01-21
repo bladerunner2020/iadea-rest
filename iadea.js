@@ -277,11 +277,15 @@ var reboot = function() {
 /**
  * Play content once (could be media file or SMIL)
  * @public
- * @param {string} downloadPath location of content
+ * @param {String | IadeaFile} file location of content or IadeaFile returned by GetFile or GetFileByName 
  *
  * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
  */
-var playFile = function (downloadPath) {
+var playFile = function (file) {
+    var downloadPath = file.downloadPath;
+
+    if (typeof(file) === 'string') downloadPath = file;
+    
     var play_command = {
         uri: "http://localhost:8080/v2"  + downloadPath,
         className: "com.iadea.player.SmilActivity",

@@ -77,7 +77,7 @@ function Play(name) {
     }
 
     return iadea.findFileByName(name).
-        then(PlayFile);
+    then(PlayFile);
 
 }
 
@@ -92,23 +92,17 @@ var files_to_remove = [ '5AB3834E5F8D15CD2B1A75CC58778EA','EB3CEDD36EC979F1F5CD1
 
 
 iadea.connect("192.168.2.12").
-   // then(iadea.reboot).then(stop).
-   // then(iadea.switchToDefault).then(log).
+    // then(iadea.reboot).then(stop).
+    // then(iadea.switchToDefault).then(log).
+    then(function(){return Play('video.smil')}).then(log).
+    // then(iadea.switchToDefault).then(log).
+    // then(function(){return iadea.setStart('/user-data/test.smil')}).then(log).
+    //  then(function () {return DeleteFilesByFilter('test.jpg')}).then(log).
 
-   then(function(){return Play('video.smil')}).then(log).
-   // then(iadea.switchToDefault).then(log).
-  // then(function(){return iadea.setStart('/user-data/test.smil')}).then(log).
-  //  then(function () {return DeleteFilesByFilter('test.jpg')}).then(log).
-
-//    then(function() {return iadea.uploadFile(path,downloadPath ).progress(function(progress){
-//        console.log(progress);
-//    })}).then(log).
+    //    then(function() {return iadea.uploadFile(path,downloadPath ).progress(function(progress){
+    //        console.log(progress);
+    //    })}).then(log).
     then(function() {return LogFiles()}).
-  //  then(function() {return iadea.switchDisplay(true)}).then(log).
+    //  then(function() {return iadea.switchDisplay(true)}).then(log).
     then(iadea.getModelInfo).then(log).
     catch(function(err) {log(err)});
-
-
-
-
-
