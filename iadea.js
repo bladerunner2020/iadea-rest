@@ -275,16 +275,19 @@ var reboot = function() {
  * Play content once (could be media file or SMIL)
  * @public
  * @param {String | IadeaFile} file location of content or IadeaFile returned by GetFile or GetFileByName 
+ *                             or external file if parameter starts with 'http'
  *
  * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
  */
 var playFile = function (file) {
     var downloadPath = file.downloadPath;
-
     if (typeof(file) === 'string') downloadPath = file;
+
+    var uri = "http://localhost:8080/v2"  + downloadPath;
+    if (downloadPath.includes('http')) uri = downloadPath;
     
     var play_command = {
-        uri: "http://localhost:8080/v2"  + downloadPath,
+        uri: uri,
         className: "com.iadea.player.SmilActivity",
         packageName: "com.iadea.player",
         action: "android.intent.action.VIEW"
@@ -296,14 +299,17 @@ var playFile = function (file) {
 /**
  * Set default content to play each time player boots up
  * @public
- * @param {String} downloadPath location of content
+ * @param {String} downloadPath location of content - local file or external file if parameter starts with 'http'
  * @param {Boolean} fallback optional parameter if true set safe-url instead
  *
  * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
  */
 var setStart = function(downloadPath, fallback) {
+    var uri = "http://localhost:8080/v2"  + downloadPath;
+    if (downloadPath.includes('http')) uri = downloadPath;
+
     var options = {
-        uri: "http://localhost:8080/v2"  + downloadPath,
+        uri: uri,
         className: "com.iadea.player.SmilActivity",
         packageName: "com.iadea.player",
         action: "android.intent.action.VIEW"
