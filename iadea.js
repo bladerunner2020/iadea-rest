@@ -53,10 +53,7 @@ var IADEA_TIMEOUT = 5000;
  * @param {String} user (optional) user name, default: 'admin'
  * @param {String} password (optional) user password, default: ''
  *
- * @promise {{access_token: String,  -- Authorization token for further API access
- *  token_type: String,    -- Always "Bearer"
- *  expires_in: String}}   -- Number of seconds before access_token expires.
- *                            If this field is returned as an empty string, then the access token does not expire.
+ * @promise {String} access token
  *
  */
 var connect = function(host, port, user, password) {
@@ -72,7 +69,7 @@ var connect = function(host, port, user, password) {
     return call('/v2/oauth2/token', data).
         then(function (res){
             access_token = res.access_token;
-            console.log('access_token=' + access_token);
+            return access_token;
         });
 };
 
@@ -299,20 +296,106 @@ var playFile = function (file) {
 /**
  * Set default content to play each time player boots up
  * @public
- * @param {string} downloadPath location of content
+ * @param {String} downloadPath location of content
+ * @param {Boolean} fallback optional parameter if true set safe-url instead
  *
  * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
  */
-var setStart = function(downloadPath) {
-    var start_command = {
+var setStart = function(downloadPath, fallback) {
+    var options = {
         uri: "http://localhost:8080/v2"  + downloadPath,
         className: "com.iadea.player.SmilActivity",
         packageName: "com.iadea.player",
         action: "android.intent.action.VIEW"
     };    
+    var command = '/v2/app/start';
+    if (fallback) command = '/v2/app/fallback';
 
-    return call('/v2/app/start', start_command);
+    return call(command, options);
 };
+
+/**
+ * Enable or disable auto start
+ * TODO: check if disbale autostart is supported.
+ * @public
+ * @param {Boolean} enable - true if auto start is set to be enabled
+ *
+ * @promise {{settings: [ {name: {String}, value: {...} ]} - return the default value
+ */
+var enableAutoStart = function(enable) {
+    // Query current configuration
+    // Check if the setting exist
+    // if exist run update, if not run add new
+
+    if (typeof (enable) === 'undefined') enable = false;
+
+    var settingsPath = 'app.settings.com.iadea.console';
+
+    return isSettingExist(settingsPath + '.disableAutoStart').then(function(exist) {
+        if (exist)
+            return updateSettings('disableAutoStart', enable);
+
+        return newSettings('disableAutoStart', enable);
+
+    });
+};
+
+/**
+ * Check if setting exist in com.iadea.console.xxxx section
+ * @private
+ * @param {String} name - setting to update
+ *
+ * @promise {Boolean}
+ */
+var isSettingExist = function(name) {
+    return exportConfiguration().then(function(data) {
+        var deferred = Q.defer();
+        var userPref = data.userPref;
+        if (!userPref) {
+            deferred.reject(new Error('Error: userPref is not set'));
+            return deferred.promise;
+        }
+
+        var found = false;
+        for (var i = 0; i < userPref.length; i++) {
+            if (userPref[i].name == name) {found = true; break}
+        }
+
+        deferred.resolve(found);
+        return deferred.promise;
+    });
+};
+
+/**
+ * Add new setting under com.iadea.console.xxxx section
+ * @private
+ * @param {String} name - setting to add
+ * @param {any} value
+ *
+ * @promise {{settings: [ {name: {String}, value: {...} ]} - return the default value
+ */
+var newSettings = function(name, value) {
+    var options = {settings: [{name: name, value: value}]};
+    var command = '/v2/app/settings/com.iadea.console/new';
+
+    return call(command, options);
+};
+
+/**
+ * Update setting value under com.iadea.console.xxxx section
+ * @private
+ * @param {String} name - setting to update
+ * @param {any} value
+ *
+ * @promise {{settings: [ {name: {String}, value: {...} ]} - return the default value 
+ */
+var updateSettings = function(name, value) {
+    var options = {settings: [{name: name, value: value}]};
+    var command = '/v2/app/settings/com.iadea.console/update';
+
+    return call(command, options);
+};
+
 
 /**
  * Switch to play default content (e.g. set by setStart function)
@@ -539,3 +622,4 @@ exports.isWifiEnabled = isWifiEnabled;
 exports.exportConfiguration = exportConfiguration;
 exports.importConfiguration = importConfiguration;
 exports.switchDisplay = switchDisplay;
+exports.enableAutoStart = enableAutoStart;
