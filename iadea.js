@@ -38,11 +38,16 @@ var fs = require('fs');
  * Access token
  * @private
  */
-
 var access_token = null;
+
+/**
+ * Buffer size (maximum 40*1024, if upload fails try to set smaller buffer size)
+ * @public
+ */
+var BUFFER_SIZE = 4*1024;
+
 var iadea_host = null;
 var iadea_port = null;
-
 var IADEA_TIMEOUT = 5000;
 
 /**
@@ -186,17 +191,15 @@ var uploadFile = function (filename, downloadPath) {
     req.write(formStart);
 
     var writtenCount = 0;
-    fs.createReadStream(filename, { bufferSize: 40 * 1024 })
+    fs.createReadStream(filename, { bufferSize: BUFFER_SIZE })
         .on('data', function(data){
             // notify about progress
             writtenCount += data.length;
             deferred.notify({size: fileSize, done: writtenCount, percent: writtenCount/fileSize});
         })
         .on('end', function() {
-            // mark the end of the one and only part
             req.end(formEnd);
         })
-        // set "end" to false in the options so .end() isn't called on the request
         .pipe(req, { end: false });
 
     return deferred.promise;
@@ -319,6 +322,35 @@ var setStart = function(downloadPath, fallback) {
 
     return call(command, options);
 };
+
+/**
+ * Get storage information 
+ * @public
+ *
+ * @promise {[ {id: {Number},
+ *              freeSpace: {Number},
+ *              capacity :{Number},
+ *              mediaType: {String},
+  *             storageType: {String}]}
+ */
+var storageInfo = function () {
+    var command = '/v2/system/storageInfo';
+    
+    return call(command);
+};
+
+/**
+ * Trigger network event in SMIL (XMP-6200 and higher)
+ * @public
+ *
+ * @promise 
+ */
+var notify = function () {
+    var command = '/v2/task/notify';
+
+    return call(command, {});
+};
+
 
 /**
  * Enable or disable auto start
@@ -611,6 +643,7 @@ var call = function(uri, data, contentType) {
     return deferred.promise;
 };
 
+exports.BUFFER_SIZE = BUFFER_SIZE;
 exports.connect = connect;
 exports.getFileList = getFileList;
 exports.getFile = getFile;
@@ -629,3 +662,5 @@ exports.exportConfiguration = exportConfiguration;
 exports.importConfiguration = importConfiguration;
 exports.switchDisplay = switchDisplay;
 exports.enableAutoStart = enableAutoStart;
+exports.storageInfo = storageInfo;
+exports.notify = notify;
