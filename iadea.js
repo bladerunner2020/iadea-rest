@@ -1,6 +1,7 @@
 /*!
  * Iadea Rest API
  * Copyright(c) 2017 Alexander Pivovarov
+ * pivovarov@gmail.com
  * MIT Licensed
  */
 
@@ -44,7 +45,7 @@ var access_token = null;
  * Buffer size (maximum 40*1024, if upload fails try to set smaller buffer size)
  * @public
  */
-var BUFFER_SIZE = 4*1024;
+var BUFFER_SIZE = 8*1024;
 
 var iadea_host = null;
 var iadea_port = null;
@@ -260,7 +261,7 @@ var findFileByName = function (name) {
                 }
             }
 
-            throw new Error("Error. File not exist - " + name);
+            throw new Error({message: "File not found - " + name, code: 'ENOENT'});
 
         });
 };
@@ -583,7 +584,7 @@ var switchDisplay = function (on) {
 };
 
 /**
- * Performe call to Iadea REST API
+ * Perform call to Iadea REST API
  * @private
  * @param {String} uri REST API command
  * @param {Object} data - parameters
