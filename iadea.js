@@ -261,7 +261,7 @@ var findFileByName = function (name) {
                 }
             }
 
-            throw new Error({message: "File not found - " + name, code: 'ENOENT'});
+            throw new Error("File not found - " + name);
 
         });
 };
