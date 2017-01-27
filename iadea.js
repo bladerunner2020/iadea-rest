@@ -140,7 +140,7 @@ var uploadFile = function (filename, downloadPath) {
     try {
         var stats = fs.statSync(filename);
         fileSize = stats['size'];
-        modified = stats['mtime'];
+        modified = (stats['mtime']).rightNow.toISOString;
     } catch (err) {
         // file not found or other file access error
         deferred.reject(err);
@@ -190,7 +190,7 @@ var uploadFile = function (filename, downloadPath) {
     req.setHeader('Content-Length',contentLength);
 
     req.write(formStart);
-
+    
     var writtenCount = 0;
     fs.createReadStream(filename, { bufferSize: BUFFER_SIZE })
         .on('data', function(data){
@@ -210,28 +210,48 @@ var uploadFile = function (filename, downloadPath) {
  * Get list of files or list of files matching filter criteria
  * @public
  * @param {String} filter
+ * @param {String} filter_type - 'mimeType', 'completed', 'downloadPath' (default)
  *
  * @promise {{items:[{IadeaFile}]}} Json structure where items points to array of matching files
  */
-var getFileList = function(filter) {
+var getFileList = function(filter, filter_type) {
     var deferred = Q.defer();
+    
 
     function FilterFiles(data) {
         var files = data.items;
         var found = [];
+        
         for (var i = 0; i < files.length; i++) {
-            if (files[i].downloadPath.includes(filter))
+            var match = false;
+            
+            switch (filter_type) {
+                case 'completed':
+                    match = (files[i].completed == filter);
+                    
+                    break;
+                case 'mimeType':
+                    match = files[i].mimeType.includes(filter);
+                    break;
+                default:
+                    match = files[i].downloadPath.includes(filter);    
+            }
+            
+            
+            if (match)
                 found.push(files[i]);
         }
         deferred.resolve({items: found});
         return deferred.promise;
     }
 
-    if (!filter)
+    if (typeof(filter) === 'undefined')
         return call('/v2/files/find', {});
 
     return getFileList().then(FilterFiles);
 };
+
+
 
 /**
  * Get file by ID
