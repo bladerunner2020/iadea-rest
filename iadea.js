@@ -140,7 +140,7 @@ var uploadFile = function (filename, downloadPath) {
     try {
         var stats = fs.statSync(filename);
         fileSize = stats['size'];
-        modified = (stats['mtime']).rightNow.toISOString;
+        modified = (stats['mtime']).toISOString();
     } catch (err) {
         // file not found or other file access error
         deferred.reject(err);

@@ -1,13 +1,16 @@
 {
   "name": "iadea-rest",
   "version": "1.0.1",
-  "description": "",
+  "description": "A JavaScript library that provides REST API interface for Iadea media players and signboards.",
   "main": "iadea.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Alexander Pivovarov <pivovarov@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "iadea"
+  ],
   "dependencies": {
     "q": "^1.4.1"
   }
