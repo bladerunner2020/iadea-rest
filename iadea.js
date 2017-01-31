@@ -632,6 +632,12 @@ var call = function(uri, data, contentType) {
     if (access_token) options.path += '?access_token=' + access_token;
 
     var req = http.request(options, function(response) {
+        var type = response.headers['content-type'];
+
+        if (type.match(/image/))
+            response.setEncoding('binary');
+
+
         var data = '';
         response.on('data', function (chunk) {
             data += chunk;
@@ -640,10 +646,12 @@ var call = function(uri, data, contentType) {
         response.on('end', function () {
             try {
                 data = JSON.parse(data);
-                deferred.resolve(data);
+              //  deferred.resolve(data);
             } catch(err) {
-                deferred.reject(new Error("Error. JSON is expected as output."))
+               // deferred.reject(new Error("Error. JSON is expected as output."))
             }
+
+            deferred.resolve(data);
 
         });
     });
