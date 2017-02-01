@@ -104,6 +104,8 @@ function byteLength(str) {
  *
  * @promise {IadeaFile}
  * @notify {{size: Number, done: Number, percent: Number}}, size - total file size, done - uploaded so far
+ *
+ * TODO: it is necessary to check that downloadPath contains only ASCII symbols
  */
 var uploadFile = function (filename, downloadPath) {
     var deferred = Q.defer();
@@ -218,7 +220,10 @@ var uploadFile = function (filename, downloadPath) {
         .on('end', function() {
             req.end(formEnd);
         })
-        .pipe(req, { end: false });
+        .pipe(req, { end: false })
+        .on('error', function (err) {
+            deferred.reject(err);
+        });
 
     return deferred.promise;
 };
