@@ -656,6 +656,8 @@ var call = function(uri, data, contentType) {
     var req = http.request(options, function(response) {
         var type = response.headers['content-type'];
 
+        response.setTimeout(20000); //TODO: For debugging only
+
         if (type.match(/image/))
             response.setEncoding('binary');
 
