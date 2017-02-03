@@ -41,11 +41,26 @@ var fs = require('fs');
 var BUFFER_SIZE = 8*1024;
 var IADEA_TIMEOUT = 5000;
 
+/**
+ * Create new IadeaDeivce 
+ * @param {String} host
+ * @param {Number} port (optional)
+ * @param {String} user (optional)
+ * @param {String} pass (optional)
+ * 
+ * @retunr {IadeaDevice}
+ */
 function createDevice(host, port, user, pass) {
     return new IadeaDevice(host, port, user, pass);
 }
 
-
+/**
+ * Class IadeaDevice
+ * @param {String} host
+ * @param {Number} port (optional)
+ * @param {String} user (optional)
+ * @param {String} pass (optional)
+ */
 function IadeaDevice(host, port, user, pass) {
     this._access_token = null;   
     this._iadea_host = host;
@@ -273,12 +288,12 @@ function IadeaDevice(host, port, user, pass) {
      * @promise {IadeaFile}
      */
     IadeaDevice.prototype.findFileByName = function (name) {
-        return getFileList().
+        return that.getFileList().
         then(function(data){
             var files = data.items;
             for (var i = 0; i < files.length; i ++) {
                 if (files[i].downloadPath.includes(name)) {
-                    return getFile(files[i].id);
+                    return that.getFile(files[i].id);
                 }
             }
 
@@ -407,7 +422,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {Boolean}
      */
-    IadeaDevice.prototype.isSettingExist = function(name) {
+    var isSettingExist = function(name) {
         return exportConfiguration().then(function(data) {
             var deferred = Q.defer();
             var userPref = data.userPref;
@@ -434,7 +449,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {{settings: [ {name: {String}, value: {...} ]} - return the default value
      */
-    IadeaDevice.prototype.newSettings = function(name, value) {
+    var newSettings = function(name, value) {
         var options = {settings: [{name: name, value: value}]};
         var command = '/v2/app/settings/com.iadea.console/new';
 
@@ -449,7 +464,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {{settings: [ {name: {String}, value: {...} ]} - return the default value 
     */
-    IadeaDevice.prototype.updateSettings = function(name, value) {
+    var updateSettings = function(name, value) {
         var options = {settings: [{name: name, value: value}]};
         var command = '/v2/app/settings/com.iadea.console/update';
 
@@ -635,7 +650,7 @@ function IadeaDevice(host, port, user, pass) {
         var req = http.request(options, function(response) {
             var type = response.headers['content-type'];
 
-            response.setTimeout(20000); //TODO: For debugging only
+            // response.setTimeout(IADEA_TIMEOUT);
 
             if (type.match(/image/))
                 response.setEncoding('binary');
@@ -677,17 +692,6 @@ function IadeaDevice(host, port, user, pass) {
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Returns the byte length of an utf8 string
  * @private
@@ -707,5 +711,6 @@ function byteLength(str) {
 
 
 exports.BUFFER_SIZE = BUFFER_SIZE;
+exports.IADEA_TIMEOUT = IADEA_TIMEOUT;
 exports.createDevice = createDevice;
 
