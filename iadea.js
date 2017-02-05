@@ -673,7 +673,7 @@ function IadeaDevice(host, port, user, pass) {
 
             // response.setTimeout(IADEA_TIMEOUT);
 
-            if (type.match(/image/))
+            if (type && type.match(/image/))
                 response.setEncoding('binary');
 
 
