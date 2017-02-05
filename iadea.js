@@ -83,13 +83,34 @@ function IadeaDevice(host, port, user, pass) {
             password: that._iadea_pass};
 
 
-        return call('/v2/oauth2/token', data).
-        then(function (res){
-            that._access_token = res.access_token;
-            return that._access_token;
-        });
+        return call('/v2/oauth2/token', data)
+            .then(function (res){
+                that._access_token = res.access_token;
+                return that._access_token;
+            });
     };
 
+    /**
+     * Connect to device
+     * @public
+     * @promise {Boolean} true is online
+     *
+     */
+    IadeaDevice.prototype.checkOnline = function() {
+        function _onOk(data) {
+            return (data && (data != '')); // Maybe just return true?    
+        }
+        
+        function _onError(err) {
+            return false;
+        }
+        
+        return that.connect()
+            .then(_onOk)
+            .catch(_onError);
+    };
+    
+    
     /**
      * Upload a file to device
      * @public
