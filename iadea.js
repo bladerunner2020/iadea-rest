@@ -400,15 +400,17 @@ function IadeaDevice(host, port, user, pass) {
     /**
      * Trigger network event in SMIL (XMP-6200 and higher)
      * @public
-     *
+     * @param {String} event - name of smil event
      * @promise
      */
-    IadeaDevice.prototype.notify = function () {
+    IadeaDevice.prototype.notify = function (event) {
         var command = '/v2/task/notify';
+        var option = {};
+        if (event)
+            option.smilEvent = event;
 
-        return call(command, {});
+        return call(command, option);
     };
-
 
     /**
      * Enable or disable auto start
