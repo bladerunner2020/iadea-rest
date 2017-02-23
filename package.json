@@ -1,6 +1,6 @@
 {
   "name": "iadea-rest",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A JavaScript library that provides REST API interface for Iadea media players and signboards.",
   "main": "iadea.js",
   "scripts": {
@@ -13,5 +13,14 @@
   ],
   "dependencies": {
     "q": "^1.4.1"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bladerunner2020/iadea-rest.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bladerunner2020/iadea-rest/issues"
+  },
+  "homepage": "https://github.com/bladerunner2020/iadea-rest#readme"
 }
