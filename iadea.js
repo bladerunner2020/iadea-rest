@@ -1,3 +1,4 @@
+/*jshint node:true, unused:true */
 /*!
  * Iadea Rest API
  * Copyright(c) 2017 Alexander Pivovarov
@@ -91,14 +92,14 @@ function IadeaDevice(host, port, user, pass) {
     };
 
     /**
-     * Connect to device
+     * Connect to device and check if device is online
      * @public
      * @promise {Boolean} true is online
      *
      */
     IadeaDevice.prototype.checkOnline = function() {
         function _onOk(data) {
-            return (data && (data != '')); // Maybe just return true?    
+            return (data && (data !== '')); // Maybe just return true?
         }
         
         function _onError(err) {
@@ -173,8 +174,8 @@ function IadeaDevice(host, port, user, pass) {
 
         try {
             var stats = fs.statSync(filename);
-            fileSize = stats['size'];
-            modified = (stats['mtime']).toISOString();
+            fileSize = stats.size;
+            modified = (stats.mtime).toISOString();
         } catch (err) {
             // file not found or other file access error
             deferred.reject(err);
@@ -264,7 +265,7 @@ function IadeaDevice(host, port, user, pass) {
 
                 switch (filter_type) {
                     case 'completed':
-                        match = (files[i].completed == filter);
+                        match = (files[i].completed === filter);
 
                         break;
                     case 'mimeType':
@@ -282,7 +283,7 @@ function IadeaDevice(host, port, user, pass) {
             return deferred.promise;
         }
 
-        if ((typeof(filter) === 'undefined') || (filter == null))
+        if ((typeof(filter) === 'undefined') || (filter === null))
             return call('/v2/files/find', {});
 
         return that.getFileList().then(FilterFiles);
@@ -456,7 +457,7 @@ function IadeaDevice(host, port, user, pass) {
 
             var found = false;
             for (var i = 0; i < userPref.length; i++) {
-                if (userPref[i].name == name) {found = true; break}
+                if (userPref[i].name === name) {found = true; break}
             }
 
             deferred.resolve(found);
@@ -518,7 +519,7 @@ function IadeaDevice(host, port, user, pass) {
             var id = data.id;                               // data can be IdeaFile structure (then get id from it)
             if (typeof(data) === 'string') id = data;       // or just ID of file to delete
 
-            return call('/v2/files/delete', {id:id})
+            return call('/v2/files/delete', {id:id});
         }
 
         var f_arr = files.items; // is it object returned by getFileList?
@@ -595,9 +596,9 @@ function IadeaDevice(host, port, user, pass) {
     IadeaDevice.prototype.importConfiguration = function (config, runCommit) {
         var cfg = config;
         if (cfg instanceof Array) {
-            cfg = {userPref: cfg}
-        } else if (typeof(cfg.userPref) == 'undefined') {
-            cfg = {userPref: [config]}
+            cfg = {userPref: cfg};
+        } else if (typeof(cfg.userPref) === 'undefined') {
+            cfg = {userPref: [config]};
         }
 
         if (!runCommit)
@@ -642,6 +643,36 @@ function IadeaDevice(host, port, user, pass) {
         return call('/v2/hardware/display', command);
     };
 
+
+    /**
+     * Set color of ligth bars for Iadea XDS-1078
+     * if called with 1 parameter then color_or_red is a color specified as a string
+     * Format: '#RRGGBB'. Example: '#00FF00' - green color
+     *
+     * if called with 3 parameters: color_or_red is a red color
+     *
+     *
+     *
+     * @public
+     * @param {String|Number} color_or_red - color string or red part of RGB color set
+     * @param {Number} [green] - green part of RGB color set
+     * @param {Number} [blue] - blue part of RGB color set
+     */
+    IadeaDevice.prototype.setColor = function (color_or_red, green, blue) {
+
+        var color = color_or_red;
+
+        if (arguments.length === 3) {
+            color = '#' +
+                ("00" + color_or_red.toString(16)).substr(-2) +
+                ("00" + green.toString(16)).substr(-2) +
+                ("00" + blue.toString(16)).substr(-2);
+        }
+
+        return call('/v2/hardware/light', {name: 'frame', brightness: 1, color: color});
+
+    };
+
     /**
      * Perform call to Iadea REST API
      * @private
@@ -654,7 +685,7 @@ function IadeaDevice(host, port, user, pass) {
     var call = function(uri, data, contentType) {
         var deferred = Q.defer();
 
-        if ((!that._access_token) && (uri != '/v2/oauth2/token')) {
+        if ((!that._access_token) && (uri !== '/v2/oauth2/token')) {
             var err = new Error("Error. Access token is required.");
             deferred.reject(err);
             return deferred.promise;
@@ -679,22 +710,27 @@ function IadeaDevice(host, port, user, pass) {
                 response.setEncoding('binary');
 
 
-            var data = '';
+            var res_data = '';
             response.on('data', function (chunk) {
-                data += chunk;
+                res_data += chunk;
             });
 
             response.on('end', function () {
                 try {
-                    data = JSON.parse(data);
+                    res_data = JSON.parse(data);
                     //  deferred.resolve(data);
                 } catch(err) {
                     // deferred.reject(new Error("Error. JSON is expected as output."))
                 }
 
-                deferred.resolve(data);
+                // if ip address is valid but it's not an iadea device, 404 error would be returned
+                if (response.statusCode === 404)
+                    deferred.reject(new Error('Error 404. /v2/ interface is not found'));
+                else
+                    deferred.resolve(res_data);
 
             });
+            
         });
 
         req.on('error', function(err) {
