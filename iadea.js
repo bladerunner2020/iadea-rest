@@ -469,7 +469,7 @@ function IadeaDevice(host, port, user, pass) {
      * Add new setting under com.iadea.console.xxxx section
      * @private
      * @param {String} name - setting to add
-     * @param {any} value
+     * @param value
      *
      * @promise {{settings: [ {name: {String}, value: {...} ]} - return the default value
      */
@@ -484,7 +484,7 @@ function IadeaDevice(host, port, user, pass) {
      * Update setting value under com.iadea.console.xxxx section
      * @private
      * @param {String} name - setting to update
-     * @param {any} value
+     * @param value
      *
      * @promise {{settings: [ {name: {String}, value: {...} ]} - return the default value 
     */
@@ -643,7 +643,6 @@ function IadeaDevice(host, port, user, pass) {
         return call('/v2/hardware/display', command);
     };
 
-
     /**
      * Set color of ligth bars for Iadea XDS-1078
      * if called with 1 parameter then color_or_red is a color specified as a string
@@ -717,7 +716,7 @@ function IadeaDevice(host, port, user, pass) {
 
             response.on('end', function () {
                 try {
-                    res_data = JSON.parse(data);
+                    res_data = JSON.parse(res_data);
                     //  deferred.resolve(data);
                 } catch(err) {
                     // deferred.reject(new Error("Error. JSON is expected as output."))
