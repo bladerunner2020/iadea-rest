@@ -615,7 +615,7 @@ function IadeaDevice(host, port, user, pass) {
      * @promis - return the default value configured above    
      */
     IadeaDevice.prototype.settingsConsoleNew = function (config) {
-        return call('/v2/app/settings/com.iadea.console/new', cfg);
+        return call('/v2/app/settings/com.iadea.console/new', config);
     };
 
     /**
@@ -625,7 +625,7 @@ function IadeaDevice(host, port, user, pass) {
      * @promis - return the default value configured above
      */
     IadeaDevice.prototype.settingsConsoleUpdate = function (config) {
-        return call('/v2/app/settings/com.iadea.console/update', cfg);
+        return call('/v2/app/settings/com.iadea.console/update', config);
     };
 
     IadeaDevice.prototype.rawCall = function (command, data) {
