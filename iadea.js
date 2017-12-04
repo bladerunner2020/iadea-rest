@@ -169,7 +169,7 @@ function IadeaDevice(host, port, user, pass) {
                 mimeType = 'audio/mpeg';
                 break;
             default:
-                console.log('Unknown mimeType = ' + extension);
+                throw new Error('Unknown mimeType = ' + extension);
         }
 
         try {
