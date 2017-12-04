@@ -609,6 +609,30 @@ function IadeaDevice(host, port, user, pass) {
     };
 
     /**
+     * Send request via /app/settings/com.iadea.console/new
+     * @param config {JSON} - new setting object
+     *     Example: {"settings": [ {"name": "autoTimeServer", "default": "ntp://host{:port}" } ] }
+     * @promis - return the default value configured above    
+     */
+    IadeaDevice.prototype.settingsConsoleNew = function (config) {
+        return call('/v2/app/settings/com.iadea.console/new', cfg);
+    };
+
+    /**
+     * Send request via /app/settings/com.iadea.console/update
+     * @param config {JSON} - setting object
+     *     Example: {"settings": [ {"name": "autoTimeServer", "default": "ntp://host{:port}" } ] }
+     * @promis - return the default value configured above
+     */
+    IadeaDevice.prototype.settingsConsoleUpdate = function (config) {
+        return call('/v2/app/settings/com.iadea.console/update', cfg);
+    };
+
+    IadeaDevice.prototype.rawCall = function (command, data) {
+        return call(command, data);
+    };
+
+    /**
      * Commit new configuration to playerr
      * @public
      * @param {String | Object} data Commit Id or Object returned by importConfiguration
