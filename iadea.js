@@ -616,7 +616,7 @@ function IadeaDevice(host, port, user, pass) {
      * @promise {{ restartRequired: Boolean,    -- true/false , if restart is required for changes to take effect, restartRequired is true
      *  commitId: String }}                     -- ID for commitConfiguration
      */
-    IadeaDevice.prototype.commitConfiguration = function(data) {
+    function commitConfiguration(data) {
         var commitId = data.commitId;
 
         if (typeof(data) === 'string')
@@ -624,7 +624,7 @@ function IadeaDevice(host, port, user, pass) {
 
         return call('/v2/task/commitConfiguration', {commitId: commitId});
 
-    };
+    }
 
 
     /**
