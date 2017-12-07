@@ -168,6 +168,9 @@ function IadeaDevice(host, port, user, pass) {
             case "mp3":
                 mimeType = 'audio/mpeg';
                 break;
+            case "apk":
+                mimeType = 'application/vnd.android.package-archive';
+                break;
             default:
                 throw new Error('Unknown mimeType = ' + extension);
         }
