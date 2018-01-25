@@ -108,7 +108,7 @@ function IadeaDevice(host, port, user, pass) {
         
         return that.connect()
             .then(_onOk)
-            .catch(_onError);
+            .fail(_onError);
     };
     
     
