@@ -508,6 +508,16 @@ function IadeaDevice(host, port, user, pass) {
         return call('/v2/app/switch', {mode: 'start'});
     };
 
+    /**
+     * Switch
+     * @public
+     * @param mode - 'home' - switch from app to home screen
+     * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
+     */
+    IadeaDevice.prototype.switch = function (mode) {
+        return call('/v2/app/switch', {mode: mode});
+    };
+    
 
     /**
      * Delete one or more files.
