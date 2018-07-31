@@ -509,12 +509,12 @@ function IadeaDevice(host, port, user, pass) {
     };
 
     /**
-     * Switch
+     * SwitchTo
      * @public
      * @param mode - 'home' - switch from app to home screen
      * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
      */
-    IadeaDevice.prototype.switch = function (mode) {
+    IadeaDevice.prototype.switchTo = function (mode) {
         return call('/v2/app/switch', {mode: mode});
     };
     
