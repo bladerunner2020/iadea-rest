@@ -804,8 +804,17 @@ function byteLength(str) {
     return s;
 }
 
+// Necessary to use in IridiumMobile
+if (typeof IR === 'object') {
+    var exports = {};
+}
 
 exports.BUFFER_SIZE = BUFFER_SIZE;
 exports.IADEA_TIMEOUT = IADEA_TIMEOUT;
 exports.createDevice = createDevice;
 
+// Necessary to use in IridiumMobile
+if ((typeof IR === 'object') && (typeof module === 'object')) {
+    module['iadea-rest'] = exports;
+    exports = null;
+}
