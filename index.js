@@ -371,11 +371,9 @@ function IadeaDevice(host, port, user, pass) {
      * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
      */
     IadeaDevice.prototype.setStart = function(downloadPath, fallback) {
-        var options = {};
+        var options = downloadPath;
         
-        try{
-            options = JSON.parse(downloadPath);
-        } catch(e) {
+        if (typeof options !== 'object') {
             var uri = "http://localhost:8080/v2"  + downloadPath;
             if (downloadPath.includes('http')) uri = downloadPath;
             
