@@ -86,6 +86,10 @@ function IadeaDevice(host, port, user, pass) {
 
         return call('/v2/oauth2/token', data)
             .then(function (res){
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+
                 that._access_token = res.access_token;
                 return that._access_token;
             });
@@ -372,7 +376,7 @@ function IadeaDevice(host, port, user, pass) {
      */
     IadeaDevice.prototype.setStart = function(downloadPath, fallback) {
         var options = downloadPath;
-        
+
         if (typeof options !== 'object') {
             var uri = "http://localhost:8080/v2"  + downloadPath;
             if (downloadPath.includes('http')) uri = downloadPath;
@@ -608,9 +612,18 @@ function IadeaDevice(host, port, user, pass) {
      */
     IadeaDevice.prototype.exportConfiguration = function () {
         return call('/v2/task/exportConfiguration');
-
     };
 
+    /**
+     * Update device password
+     * @public
+     * @param {String} pass - new password, null to reset default password
+     * @promise {IdeaUserPref} return the player configuration
+     */
+    IadeaDevice.prototype.setPassword = function (pass) {
+        return call('/v2/security/users/admin', {password: pass || 'pass'});
+    };
+    
     /**
      * Import new configuration to player
      * @public
