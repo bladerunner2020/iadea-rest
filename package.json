@@ -1,6 +1,6 @@
 {
   "name": "iadea-rest",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "A JavaScript library that provides REST API interface for Iadea media players and signboards.",
   "main": "index.js",
   "scripts": {

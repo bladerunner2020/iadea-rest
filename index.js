@@ -316,7 +316,8 @@ function IadeaDevice(host, port, user, pass) {
         return that.getFileList().
         then(function(data){
             var files = data.items;
-            for (var i = 0; i < files.length; i ++) {
+            var count = files ? files.length : 0;
+            for (var i = 0; i < count; i ++) {
                 if (files[i].downloadPath.includes(name)) {
                     return that.getFile(files[i].id);
                 }
@@ -370,20 +371,36 @@ function IadeaDevice(host, port, user, pass) {
      * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
      */
     IadeaDevice.prototype.setStart = function(downloadPath, fallback) {
-        var uri = "http://localhost:8080/v2"  + downloadPath;
-        if (downloadPath.includes('http')) uri = downloadPath;
+        var options = {};
+        
+        try{
+            options = JSON.parse(downloadPath);
+        } catch(e) {
+            var uri = "http://localhost:8080/v2"  + downloadPath;
+            if (downloadPath.includes('http')) uri = downloadPath;
+            
+            options = {
+                uri: uri,
+                className: "com.iadea.player.SmilActivity",
+                packageName: "com.iadea.player",
+                action: "android.intent.action.VIEW"
+            };            
+        }
 
-        var options = {
-            uri: uri,
-            className: "com.iadea.player.SmilActivity",
-            packageName: "com.iadea.player",
-            action: "android.intent.action.VIEW"
-        };
         var command = '/v2/app/start';
         if (fallback) command = '/v2/app/fallback';
 
         return call(command, options);
     };
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     /**
      * Get storage information
