@@ -43,13 +43,13 @@ var BUFFER_SIZE = 8*1024;
 var IADEA_TIMEOUT = 5000;
 
 /**
- * Create new IadeaDeivce 
+ * Create new IadeaDevice 
  * @param {String} host
  * @param {Number} port (optional)
  * @param {String} user (optional)
  * @param {String} pass (optional)
  * 
- * @retunr {IadeaDevice}
+ * @return {IadeaDevice}
  */
 function createDevice(host, port, user, pass) {
     return new IadeaDevice(host, port, user, pass);
@@ -106,6 +106,7 @@ function IadeaDevice(host, port, user, pass) {
             return (data && (data !== '')); // Maybe just return true?
         }
         
+        // eslint-disable-next-line no-unused-vars
         function _onError(err) {
             return false;
         }
@@ -145,34 +146,34 @@ function IadeaDevice(host, port, user, pass) {
             case 'mp4':
                 mimeType = 'video/mp4';
                 break;
-            case "mpe":
-            case "mpeg":
-            case "mpg":
+            case 'mpe':
+            case 'mpeg':
+            case 'mpg':
                 mimeType = 'video/mpeg';
                 break;
-            case "avi":
+            case 'avi':
                 mimeType = 'video/x-msvideo';
                 break;
-            case "wmv":
+            case 'wmv':
                 mimeType = 'video/x-ms-wmv';
                 break;
-            case "divx":
+            case 'divx':
                 mimeType = 'video/x-divx';
                 break;
-            case "mov":
+            case 'mov':
                 mimeType = 'video/quicktime';
                 break;
             case 'smil':
             case 'smi':
                 mimeType = 'application/smil';
                 break;
-            case "txt":
+            case 'txt':
                 mimeType = 'text/plain';
                 break;
-            case "mp3":
+            case 'mp3':
                 mimeType = 'audio/mpeg';
                 break;
-            case "apk":
+            case 'apk':
                 mimeType = 'application/vnd.android.package-archive';
                 break;
             default:
@@ -318,18 +319,18 @@ function IadeaDevice(host, port, user, pass) {
      */
     IadeaDevice.prototype.findFileByName = function (name) {
         return that.getFileList().
-        then(function(data){
-            var files = data.items;
-            var count = files ? files.length : 0;
-            for (var i = 0; i < count; i ++) {
-                if (files[i].downloadPath.includes(name)) {
-                    return that.getFile(files[i].id);
+            then(function(data){
+                var files = data.items;
+                var count = files ? files.length : 0;
+                for (var i = 0; i < count; i ++) {
+                    if (files[i].downloadPath.includes(name)) {
+                        return that.getFile(files[i].id);
+                    }
                 }
-            }
 
-            throw new Error("File not found - " + name);
+                throw new Error('File not found - ' + name);
 
-        });
+            });
     };
 
     /**
@@ -353,14 +354,14 @@ function IadeaDevice(host, port, user, pass) {
         var downloadPath = file.downloadPath;
         if (typeof(file) === 'string') downloadPath = file;
 
-        var uri = "http://localhost:8080/v2"  + downloadPath;
+        var uri = 'http://localhost:8080/v2'  + downloadPath;
         if (downloadPath.includes('http')) uri = downloadPath;
 
         var play_command = {
             uri: uri,
-            className: "com.iadea.player.SmilActivity",
-            packageName: "com.iadea.player",
-            action: "android.intent.action.VIEW"
+            className: 'com.iadea.player.SmilActivity',
+            packageName: 'com.iadea.player',
+            action: 'android.intent.action.VIEW'
         };
 
         return call('/v2/app/exec', play_command);
@@ -378,14 +379,14 @@ function IadeaDevice(host, port, user, pass) {
         var options = downloadPath;
 
         if (typeof options !== 'object') {
-            var uri = "http://localhost:8080/v2"  + downloadPath;
+            var uri = 'http://localhost:8080/v2'  + downloadPath;
             if (downloadPath.includes('http')) uri = downloadPath;
             
             options = {
                 uri: uri,
-                className: "com.iadea.player.SmilActivity",
-                packageName: "com.iadea.player",
-                action: "android.intent.action.VIEW"
+                className: 'com.iadea.player.SmilActivity',
+                packageName: 'com.iadea.player',
+                action: 'android.intent.action.VIEW'
             };            
         }
 
@@ -448,6 +449,8 @@ function IadeaDevice(host, port, user, pass) {
         // Check if the setting exist
         // if exist run update, if not run add new
 
+        var that = this;
+
         if (typeof (enable) === 'undefined') enable = false;
 
         var settingsPath = 'app.settings.com.iadea.console';
@@ -459,33 +462,35 @@ function IadeaDevice(host, port, user, pass) {
             return newSettings('disableAutoStart', enable);
 
         });
-    };
 
-    /**
-     * Check if setting exist in com.iadea.console.xxxx section
-     * @private
-     * @param {String} name - setting to update
-     *
-     * @promise {Boolean}
-     */
-    var isSettingExist = function(name) {
-        return exportConfiguration().then(function(data) {
-            var deferred = Q.defer();
-            var userPref = data.userPref;
-            if (!userPref) {
-                deferred.reject(new Error('Error: userPref is not set'));
+        /**
+         * Check if setting exist in com.iadea.console.xxxx section
+         * @private
+         * @param {String} name - setting to update
+         *
+         * @promise {Boolean}
+         */
+        function isSettingExist(name) {
+            return that.exportConfiguration().then(function(data) {
+                var deferred = Q.defer();
+                var userPref = data.userPref;
+                if (!userPref) {
+                    deferred.reject(new Error('Error: userPref is not set'));
+                    return deferred.promise;
+                }
+
+                var found = false;
+                for (var i = 0; i < userPref.length; i++) {
+                    if (userPref[i].name === name) {found = true; break;}
+                }
+
+                deferred.resolve(found);
                 return deferred.promise;
-            }
-
-            var found = false;
-            for (var i = 0; i < userPref.length; i++) {
-                if (userPref[i].name === name) {found = true; break}
-            }
-
-            deferred.resolve(found);
-            return deferred.promise;
-        });
+            });
+        }
     };
+
+
 
     /**
      * Add new setting under com.iadea.console.xxxx section
@@ -728,9 +733,9 @@ function IadeaDevice(host, port, user, pass) {
 
         if (arguments.length === 3) {
             color = '#' +
-                ("00" + color_or_red.toString(16)).substr(-2) +
-                ("00" + green.toString(16)).substr(-2) +
-                ("00" + blue.toString(16)).substr(-2);
+                ('00' + color_or_red.toString(16)).substr(-2) +
+                ('00' + green.toString(16)).substr(-2) +
+                ('00' + blue.toString(16)).substr(-2);
         }
 
         return call('/v2/hardware/light', {name: 'frame', brightness: 1, color: color});
@@ -750,7 +755,7 @@ function IadeaDevice(host, port, user, pass) {
         var deferred = Q.defer();
 
         if ((!that._access_token) && (uri !== '/v2/oauth2/token')) {
-            var err = new Error("Error. Access token is required.");
+            var err = new Error('Error. Access token is required.');
             deferred.reject(err);
             return deferred.promise;
         }

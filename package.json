@@ -1,8 +1,8 @@
 {
   "name": "iadea-rest",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "A JavaScript library that provides REST API interface for Iadea media players and signboards.",
-  "main": "index.js",
+  "main": "iadea-rest.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
