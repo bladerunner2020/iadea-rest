@@ -170,9 +170,16 @@ function IadeaDevice(host, port, user, pass) {
             case 'txt':
                 mimeType = 'text/plain';
                 break;
+            case 'htm':
+            case 'html':
+            case 'htmls':
+              mimeType = 'text/html';
+                break;
             case 'mp3':
                 mimeType = 'audio/mpeg';
                 break;
+            case 'wgt':
+                mimeType = 'application/zip';
             case 'apk':
                 mimeType = 'application/vnd.android.package-archive';
                 break;
@@ -595,7 +602,7 @@ function IadeaDevice(host, port, user, pass) {
      * Get player model name and other manufacture use only information
      * @public
      * @promise {{modelDescription: String, modelName: String, modelURL: String, manufacturer: String, licenseModel: String,
-     *  PCBRevision: String, manufacturerURL: String, PCB: Sring, options: [Sring] }}
+     *  PCBRevision: String, manufacturerURL: String, PCB: String, options: [String] }}
      */
     IadeaDevice.prototype.getModelInfo = function () {
         return call('/v2/system/modelInfo');
@@ -658,7 +665,7 @@ function IadeaDevice(host, port, user, pass) {
      * Send request via /app/settings/com.iadea.console/new
      * @param config {JSON} - new setting object
      *     Example: {"settings": [ {"name": "autoTimeServer", "default": "ntp://host{:port}" } ] }
-     * @promis - return the default value configured above    
+     * @promise - return the default value configured above    
      */
     IadeaDevice.prototype.settingsConsoleNew = function (config) {
         return call('/v2/app/settings/com.iadea.console/new', config);
@@ -668,7 +675,7 @@ function IadeaDevice(host, port, user, pass) {
      * Send request via /app/settings/com.iadea.console/update
      * @param config {JSON} - setting object
      *     Example: {"settings": [ {"name": "autoTimeServer", "default": "ntp://host{:port}" } ] }
-     * @promis - return the default value configured above
+     * @promise - return the default value configured above
      */
     IadeaDevice.prototype.settingsConsoleUpdate = function (config) {
         return call('/v2/app/settings/com.iadea.console/update', config);
@@ -714,7 +721,7 @@ function IadeaDevice(host, port, user, pass) {
     };
 
     /**
-     * Set color of ligth bars for Iadea XDS-1078
+     * Set color of light bars for Iadea XDS-1078
      * if called with 1 parameter then color_or_red is a color specified as a string
      * Format: '#RRGGBB'. Example: '#00FF00' - green color
      *
@@ -803,7 +810,7 @@ function IadeaDevice(host, port, user, pass) {
         });
 
         req.on('error', function(err) {
-            // If reboot is run. 'ECONNRESET' (scocket hang up) error is thrown.
+            // If reboot is run. 'ECONNRESET' (socket hang up) error is thrown.
             deferred.reject(err);
         });
 
