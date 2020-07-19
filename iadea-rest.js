@@ -184,7 +184,7 @@ function IadeaDevice(host, port, user, pass) {
                 mimeType = 'application/vnd.android.package-archive';
                 break;
             default:
-                throw new Error('Unknown mimeType = ' + extension);
+              mimeType = 'application/octet-stream';
         }
 
         try {
