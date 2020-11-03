@@ -1,6 +1,6 @@
 {
   "name": "iadea-rest",
-  "version": "1.6.5",
+  "version": "1.6.6",
   "description": "A JavaScript library that provides REST API interface for Iadea media players and signboards.",
   "main": "iadea-rest.js",
   "scripts": {
@@ -13,7 +13,8 @@
   ],
   "devDependencies": {
     "grunt": "^1.0.1",
-    "grunt-bump": "^0.8.0"
+    "grunt-bump": "^0.8.0",
+    "image-file": "^1.1.1"
   },
   "repository": {
     "type": "git",

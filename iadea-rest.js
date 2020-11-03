@@ -77,7 +77,7 @@ function IadeaDevice(host, port, user, pass) {
      * @promise {String} access token
      *
      */
-    IadeaDevice.prototype.connect = function() {
+    this.connect = function() {
         var data = {
             grant_type: 'password',
             username: that._iadea_user,
@@ -101,7 +101,7 @@ function IadeaDevice(host, port, user, pass) {
      * @promise {Boolean} true is online
      *
      */
-    IadeaDevice.prototype.checkOnline = function() {
+    this.checkOnline = function() {
         function _onOk(data) {
             return (data && (data !== '')); // Maybe just return true?
         }
@@ -128,7 +128,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * TODO: it is necessary to check that downloadPath contains only ASCII symbols
      */
-    IadeaDevice.prototype.uploadFile = function (filename, downloadPath) {
+    this.uploadFile = function (filename, downloadPath) {
         var deferred = Q.defer();
         var mimeType = '';
         var modified = '';
@@ -267,7 +267,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {{items:[{IadeaFile}]}} Json structure where items points to array of matching files
      */
-    IadeaDevice.prototype.getFileList = function(filter, filter_type) {
+    this.getFileList = function(filter, filter_type) {
         var deferred = Q.defer();
 
 
@@ -313,7 +313,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {IadeaFile}
      */
-    IadeaDevice.prototype.getFile = function(id) {
+    this.getFile = function(id) {
         return call('/v2/files/' + id);
     };
 
@@ -324,7 +324,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {IadeaFile}
      */
-    IadeaDevice.prototype.findFileByName = function (name) {
+    this.findFileByName = function (name) {
         return that.getFileList().
             then(function(data){
                 var files = data.items;
@@ -345,7 +345,7 @@ function IadeaDevice(host, port, user, pass) {
      * @public
      * @promise {Error}. Note: connection will be terminated and promise rejected is call. Promise resolved is never called in this case.
      */
-    IadeaDevice.prototype.reboot = function() {
+    this.reboot = function() {
         return call('/v2/task/reboot');
     };
 
@@ -357,7 +357,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
      */
-    IadeaDevice.prototype.playFile = function (file) {
+    this.playFile = function (file) {
         var downloadPath = file.downloadPath;
         if (typeof(file) === 'string') downloadPath = file;
 
@@ -382,7 +382,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
      */
-    IadeaDevice.prototype.setStart = function(downloadPath, fallback) {
+    this.setStart = function(downloadPath, fallback) {
         var options = downloadPath;
 
         if (typeof options !== 'object') {
@@ -422,7 +422,7 @@ function IadeaDevice(host, port, user, pass) {
      *              mediaType: {String},
      *             storageType: {String}]}
      */
-    IadeaDevice.prototype.storageInfo = function () {
+    this.storageInfo = function () {
         var command = '/v2/system/storageInfo';
 
         return call(command);
@@ -434,7 +434,7 @@ function IadeaDevice(host, port, user, pass) {
      * @param {String} event - name of smil event
      * @promise
      */
-    IadeaDevice.prototype.notify = function (event) {
+    this.notify = function (event) {
         var command = '/v2/task/notify';
         var option = {};
         if (event)
@@ -451,7 +451,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {{settings: [ {name: {String}, value: {...} ]} - return the default value
      */
-    IadeaDevice.prototype.enableAutoStart = function(enable) {
+    this.enableAutoStart = function(enable) {
         // Query current configuration
         // Check if the setting exist
         // if exist run update, if not run add new
@@ -535,7 +535,7 @@ function IadeaDevice(host, port, user, pass) {
      * @public
      * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
      */
-    IadeaDevice.prototype.switchToDefault = function () {
+    this.switchToDefault = function () {
         return call('/v2/app/switch', {mode: 'start'});
     };
 
@@ -545,7 +545,7 @@ function IadeaDevice(host, port, user, pass) {
      * @param mode - 'home' - switch from app to home screen
      * @promise {{uri: String, packageName: String, className: String, action: String, type: String}}
      */
-    IadeaDevice.prototype.switchTo = function (mode) {
+    this.switchTo = function (mode) {
         return call('/v2/app/switch', {mode: mode});
     };
     
@@ -557,7 +557,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {{}|[{}..{}]} when promise fulfilled returns empty json object or array of empty json objects
      */
-    IadeaDevice.prototype.deleteFiles = function (files) {
+    this.deleteFiles = function (files) {
         // Delete a file by fileID or by file Object
         function _delete(data) {
             var id = data.id;                               // data can be IdeaFile structure (then get id from it)
@@ -585,7 +585,7 @@ function IadeaDevice(host, port, user, pass) {
      * @public
      * @promise {}
      */
-    IadeaDevice.prototype.getScreenshot = function() {
+    this.getScreenshot = function() {
         return call('/v2/task/screenshot');
     };
 
@@ -594,7 +594,7 @@ function IadeaDevice(host, port, user, pass) {
      * @public
      * @promise {{firmwareVersion: String, family: String}}
      */
-    IadeaDevice.prototype.getFirmwareInfo = function () {
+    this.getFirmwareInfo = function () {
         return call('/v2/system/firmwareInfo');
     };
 
@@ -604,7 +604,7 @@ function IadeaDevice(host, port, user, pass) {
      * @promise {{modelDescription: String, modelName: String, modelURL: String, manufacturer: String, licenseModel: String,
      *  PCBRevision: String, manufacturerURL: String, PCB: String, options: [String] }}
      */
-    IadeaDevice.prototype.getModelInfo = function () {
+    this.getModelInfo = function () {
         return call('/v2/system/modelInfo');
     };
 
@@ -613,7 +613,7 @@ function IadeaDevice(host, port, user, pass) {
      * @public
      * @promise {Boolean}
      */
-    IadeaDevice.prototype.isWifiEnabled = function () {
+    this.isWifiEnabled = function () {
         return call('/v2/android.net.wifi.WifiManager/isWifiEnabled');
     };
 
@@ -622,7 +622,7 @@ function IadeaDevice(host, port, user, pass) {
      * @public
      * @promise {IdeaUserPref} return the player configuration
      */
-    IadeaDevice.prototype.exportConfiguration = function () {
+    this.exportConfiguration = function () {
         return call('/v2/task/exportConfiguration');
     };
 
@@ -632,7 +632,7 @@ function IadeaDevice(host, port, user, pass) {
      * @param {String} pass - new password, null to reset default password
      * @promise {IdeaUserPref} return the player configuration
      */
-    IadeaDevice.prototype.setPassword = function (pass) {
+    this.setPassword = function (pass) {
         return call('/v2/security/users/admin', {password: pass || 'pass'});
     };
     
@@ -646,7 +646,7 @@ function IadeaDevice(host, port, user, pass) {
      *  restartRequired: Boolean,  -- true/false , if restart is required for changes to take effect, restartRequired is true
      *  commitId: String }}        -- ID for commitConfiguration
      */
-    IadeaDevice.prototype.importConfiguration = function (config, runCommit) {
+    this.importConfiguration = function (config, runCommit) {
         var cfg = config;
         if (cfg instanceof Array) {
             cfg = {userPref: cfg};
@@ -667,7 +667,7 @@ function IadeaDevice(host, port, user, pass) {
      *     Example: {"settings": [ {"name": "autoTimeServer", "default": "ntp://host{:port}" } ] }
      * @promise - return the default value configured above    
      */
-    IadeaDevice.prototype.settingsConsoleNew = function (config) {
+    this.settingsConsoleNew = function (config) {
         return call('/v2/app/settings/com.iadea.console/new', config);
     };
 
@@ -677,11 +677,11 @@ function IadeaDevice(host, port, user, pass) {
      *     Example: {"settings": [ {"name": "autoTimeServer", "default": "ntp://host{:port}" } ] }
      * @promise - return the default value configured above
      */
-    IadeaDevice.prototype.settingsConsoleUpdate = function (config) {
+    this.settingsConsoleUpdate = function (config) {
         return call('/v2/app/settings/com.iadea.console/update', config);
     };
 
-    IadeaDevice.prototype.rawCall = function (command, data) {
+    this.rawCall = function (command, data) {
         return call(command, data);
     };
 
@@ -711,7 +711,7 @@ function IadeaDevice(host, port, user, pass) {
      *
      * @promise {{id: Number, power: Boolean}} id is always 0, power - last state of the screen (that was before switchDisplay is caleld)
      */
-    IadeaDevice.prototype.switchDisplay = function (on) {
+    this.switchDisplay = function (on) {
         var power = 'standby';
         if (on) power = 'on';
 
@@ -734,7 +734,7 @@ function IadeaDevice(host, port, user, pass) {
      * @param {Number} [green] - green part of RGB color set
      * @param {Number} [blue] - blue part of RGB color set
      */
-    IadeaDevice.prototype.setColor = function (color_or_red, green, blue) {
+    this.setColor = function (color_or_red, green, blue) {
 
         var color = color_or_red;
 

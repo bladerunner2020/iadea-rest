@@ -1,4 +1,4 @@
-var iadea_device = require('../index');
+var iadea_device = require('../iadea-rest');
 var Q = require('q');
 var fs = require('fs');
 
